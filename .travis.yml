@@ -11,18 +11,14 @@ before_script:
 language: python
 python:
   - "3.6"
-  - "3.7"
-  - "2.5"
 install:
   - pip install -r requirements.txt
   - pip install codacy-coverage
-  - pip install flake8
 script:
   - cd decide
   - coverage run --branch --source=. ./manage.py test --keepdb --with-xunit
   - coverage xml
   - python-codacy-coverage -r coverage.xml
-  - flake8 .
+ 
   
-  before_script:
- - cp local_settings.travis.py local_settings.py
+
