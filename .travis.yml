@@ -1,42 +1,28 @@
+dist: xenial
+
+services:
+  - postgresql
+addons:
+  postgresql: "9.4"
+before_script:
+  - psql -U postgres -c "create user decide password 'decide'"
+  - psql -U postgres -c "create database test_decide owner decide"
+  - psql -U postgres -c "ALTER USER decide CREATEDB"
 language: python
 python:
-- '3.6'
-- '3.5'
-services:
-- postgresql
-env:
-- DJANGO=2.0 DB=postgres
-global:
-- PGPORT=5432
-before_install:
-- cd decide
+  - "3.6"
+  - "3.7"
+  - "2.5"
 install:
-- pip install -r ../requirements.txt
-- wget -N http://chromedriver.storage.googleapis.com/2.30/chromedriver_linux64.zip -P ~/
-- unzip ~/chromedriver_linux64.zip -d ~/
-- rm ~/chromedriver_linux64.zip
-- sudo mv -f ~/chromedriver /usr/local/share/
-- sudo chmod +x /usr/local/share/chromedriver
-- sudo ln -s /usr/local/share/chromedriver /usr/local/bin/chromedriver
-before_script:
-- cp local_settings.example.py local_settings.py
-- psql -c "create user decide with password 'decide'"
-- psql -c "create database decide owner decide"
-- python manage.py makemigrations
-- python manage.py migrate
-- python manage.py loaddata initial_data
+  - pip install -r requirements.txt
+  - pip install codacy-coverage
+  - pip install flake8
 script:
-- travis_wait 20 python manage.py test
-addons:
-  postgresql: '9.6'
-jobs:
-  include:
-  - stage: deploy
-    script: skip
-    before_deploy:
-    - cd ..
-    deploy:
-      provider: heroku
-      api_key:
-        secure: EEcMswvAMUMGznokwt0P4FXWWYWTcLJtPjBLvkCGAKddr/Ry8l6o3gMNGWpxqy0KYKFUizloSOJs9gBAIWMlTFvEJl0p7YuHRSa1nbnVN9MNmEP2Iclkm+wCdbdyb1Gu55VdHbPttzV7mHkS51U2G2nWHtUUywHbfhcKUNLuhTyVD6kuHinq/P1mGzIQ0vySW3C2xoSMkCrsjzDYLrkz4g9U39MP7O+uBRjgil3gg3qJYIQtQtygBD9zMgEuW8/D6IntRIkeJnhvaVXLN3gCJwqxP3iz5g3WrH5jOspA0Ny+acWy1YN7V4stMA49yVXrEpYXVenOJqwmCRyEZ7/sAFB3ZlFDuLNFyLHcpuRr+cGveKH4Rr5gU+u+F1EYHiwplJb2Jf/AMLi1UBa+AiBmywMCc4/RKGtsE0eGni3D9K3WDmPlB3t+8/iKauUy2utnkE4+o9jNbdf2rZFAZyRRDP6dxMY0HpKaaRudZmHyaWUd0l/JN5NSAdIOIltKB++PEitjGIN6yo84Z3Bc9sE9eOKzN/Byk8/m23LxENZzydppmTGOHchw8LBGjlwd/whGSfVT7EgmQA1GfVnTYezgRuDLaIfuYCU5ACJHL4kixgWGAoa8pXvV2v/o/cMtXCPNECjLYkSkkjZzgMeoic5krl+zX6bqn1GrGroLYlSYUOw=
-      app: locaste-decide
+  - cd decide
+  - coverage run --branch --source=. ./manage.py test --keepdb --with-xunit
+  - coverage xml
+  - python-codacy-coverage -r coverage.xml
+  - flake8 .
+  
+  before_script:
+ - cp local_settings.travis.py local_settings.py
